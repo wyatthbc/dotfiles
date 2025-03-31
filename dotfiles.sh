@@ -10,6 +10,7 @@ cp -r ~/.config/nvim ~/dotfiles
 cp -r ~/.zshrc ~/dotfiles
 #cp -r ~/.config/compfy ~/dotfiles
 cp -r ~/.config/rofi ~/dotfiles
+cp -r ~/.tmux.conf ~/dotfiles
 
 cd ~/dotfiles
 git add --all

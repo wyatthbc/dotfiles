@@ -1,4 +1,3 @@
-neofetch
 # Enable Powerlevel10k instant prompt. Should stay close to the top of ~/.zshrc.
 # Initialization code that may require console input (password prompts, [y/n]
 # confirmations, etc.) must go above this block; everything else may go below.
@@ -78,7 +77,7 @@ ZSH_THEME="powerlevel10k/powerlevel10k"
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(git)
+plugins=(git zsh-autosuggestions F-Sy-H zsh-autocomplete fzf-tab zoxide fzf)
 
 source $ZSH/oh-my-zsh.sh
 
@@ -110,10 +109,60 @@ source $ZSH/oh-my-zsh.sh
 # Example aliases
 # alias zshconfig="mate ~/.zshrc"
 # alias ohmyzsh="mate ~/.oh-my-zsh"
-alias ls="eza"
-alias ll="eza -l"
-alias cat="batcat"
-alias dots=~/dotfiles/dotfiles.sh
+alias vim="nvim"
+
+# Debian/Ubuntu package bat as `batcat` to dodge a name clash, so prefer
+# whichever binary actually exists. Same idea for eza: if it is missing we keep
+# the system ls rather than aliasing to a command that is not there.
+if command -v bat >/dev/null 2>&1; then
+  alias cat="bat"
+elif command -v batcat >/dev/null 2>&1; then
+  alias cat="batcat"
+fi
+if command -v eza >/dev/null 2>&1; then
+  alias ls="eza --icons=auto"
+  alias ll="eza -l -h --icons=auto --classify=auto"
+  alias tree="eza --tree --icons=auto"
+fi
 
 # To customize prompt, run `p10k configure` or edit ~/.p10k.zsh.
 [[ ! -f ~/.p10k.zsh ]] || source ~/.p10k.zsh
+
+# Added by LM Studio CLI (lms) -- macOS-only in practice, so guarded.
+[ -d "$HOME/.lmstudio/bin" ] && export PATH="$PATH:$HOME/.lmstudio/bin"
+# End of LM Studio CLI section
+
+# Added by Antigravity -- guarded for the same reason.
+[ -d "$HOME/.antigravity/antigravity/bin" ] && export PATH="$HOME/.antigravity/antigravity/bin:$PATH"
+
+[ -f "$HOME/.local/bin/env" ] && . "$HOME/.local/bin/env"
+
+# --- Modern CLI Tooling ---
+# zoxide (smarter cd)
+command -v zoxide >/dev/null 2>&1 && eval "$(zoxide init zsh --cmd cd)"
+
+# fzf (fuzzy finder)
+[ -f ~/.fzf.zsh ] && source ~/.fzf.zsh
+# Use fd for fzf instead of find (much faster)
+export FZF_DEFAULT_COMMAND='fd --type f --strip-cwd-prefix --hidden --follow --exclude .git'
+export FZF_CTRL_T_COMMAND="$FZF_DEFAULT_COMMAND"
+
+# --- Better Aliases ---
+alias zz="z -"
+alias y="yazi"
+alias help="tlrc" # Using tlrc as brew suggested it's the maintained one
+
+# Ghostty sends TERM=xterm-ghostty, which most SSH hosts don't have a
+# terminfo entry for (garbled keys, some hosts reject the pty request).
+# Override it only for SSH sessions so local Ghostty keeps full features.
+ssh() {
+  TERM=xterm-256color command ssh "$@"
+}
+
+
+# Added by Antigravity CLI installer
+[ -d "$HOME/.local/bin" ] && export PATH="$HOME/.local/bin:$PATH"
+
+# Machine-specific settings that should not be versioned (work-only env vars,
+# one-off paths). Create ~/.zshrc.local on that machine; it is gitignored.
+[ -f "$HOME/.zshrc.local" ] && source "$HOME/.zshrc.local"

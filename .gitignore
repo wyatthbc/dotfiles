@@ -1,0 +1,24 @@
+# Machine-specific overrides, sourced by .zshrc when present.
+*.local
+
+# OS / tooling noise
+.DS_Store
+*~
+*.swp
+*.bak
+*.bak-*
+
+# zsh completion cache
+.zcompdump*
+
+# Credentials and agent state. These are not in any stow package today; the
+# entries exist so that adding a package later cannot sweep them in silently.
+.ssh/
+.aws/
+.kube/
+.claude/
+.claude.json*
+*.pem
+*.key
+id_rsa*
+id_ed25519*

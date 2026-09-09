@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+# Pre-commit guard. This repo is PUBLIC, so refuse to record credentials or
+# internal network details. This is a backstop, not the primary control -- the
+# primary control is that ~/.claude, ~/.ssh, ~/.aws and ~/.kube are never
+# members of a stow package.
+set -uo pipefail
+
+fail=0
+report() { printf '  - %s\n' "$1" >&2; fail=1; }
+
+staged=$(git diff --cached --name-only --diff-filter=ACM)
+[ -z "$staged" ] && exit 0
+
+# Blocked paths, regardless of content.
+while IFS= read -r f; do
+  [ -z "$f" ] && continue
+  case "$f" in
+    .ssh/*|*/.ssh/*|.aws/*|*/.aws/*|.kube/*|*/.kube/*|\
+    .claude/*|*/.claude/*|.claude.json*|*.pem|*.key|*id_rsa*|*id_ed25519*)
+      report "blocked path: $f" ;;
+  esac
+done <<< "$staged"
+
+# Content patterns in added lines only.
+added=$(git diff --cached -U0 | grep '^+' | grep -v '^+++' || true)
+
+check() {
+  local hits
+  hits=$(printf '%s\n' "$added" | grep -Ei -- "$1" || true)
+  if [ -n "$hits" ]; then
+    report "$2"
+    printf '%s\n' "$hits" | head -3 | sed 's/^/      /' >&2
+  fi
+}
+
+check 'AKIA[0-9A-Z]{16}'                                          'AWS access key id'
+check '\-\-\-\-\-BEGIN [A-Z ]*PRIVATE KEY'                          'private key block'
+check 'gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,}'   'GitHub token'
+check 'sk-(ant-)?[A-Za-z0-9_-]{20,}'                              'Anthropic/OpenAI-style API key'
+check '(api[_-]?key|secret|password|passwd|token)["'"'"']?[[:space:]]*[:=][[:space:]]*["'"'"']?[A-Za-z0-9/+_-]{12,}' 'credential assigned a value'
+check '(^|[^0-9.])(10\.[0-9]{1,3}|192\.168|172\.(1[6-9]|2[0-9]|3[01]))\.[0-9]{1,3}\.[0-9]{1,3}' 'private (RFC1918) IP address'
+
+if [ "$fail" -ne 0 ]; then
+  cat >&2 <<'MSG'
+
+pre-commit: refusing the commit -- this repo is public.
+If a finding is a false positive (an empty upstream placeholder, prose),
+bypass deliberately with:
+
+    git commit --no-verify
+
+MSG
+  exit 1
+fi
+exit 0

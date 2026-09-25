@@ -83,7 +83,12 @@
 
 # disk_usage.sh {
 	# Filesystem to retrieve disk space information. Any from the filesystems available (run "df | awk '{print }'" to check them).
-	export TMUX_POWERLINE_SEG_DISK_USAGE_FILESYSTEM="/System/Volumes/Data"
+	# macOS: the Data volume, since "/" is the sealed system volume. Elsewhere: "/".
+	if [ -d /System/Volumes/Data ]; then
+		export TMUX_POWERLINE_SEG_DISK_USAGE_FILESYSTEM="/System/Volumes/Data"
+	else
+		export TMUX_POWERLINE_SEG_DISK_USAGE_FILESYSTEM="/"
+	fi
 # }
 
 # dropbox_status.sh {

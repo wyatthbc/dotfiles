@@ -9,7 +9,8 @@
 # Output mirrors the mem field of tmux_mem_cpu_load ("20/24GB") for consistency:
 #   󰋊 271/460G 64%
 
-TMUX_POWERLINE_SEG_DISK_USAGE_FILESYSTEM="${TMUX_POWERLINE_SEG_DISK_USAGE_FILESYSTEM:-/System/Volumes/Data}"
+if [ -d /System/Volumes/Data ]; then _disk_default=/System/Volumes/Data; else _disk_default=/; fi
+TMUX_POWERLINE_SEG_DISK_USAGE_FILESYSTEM="${TMUX_POWERLINE_SEG_DISK_USAGE_FILESYSTEM:-$_disk_default}"
 TMUX_POWERLINE_SEG_DISK_USAGE_GLYPH="${TMUX_POWERLINE_SEG_DISK_USAGE_GLYPH:-󰋊}"
 
 generate_segmentrc() {
